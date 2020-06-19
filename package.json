@@ -1,0 +1,29 @@
+{
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "rollup": "^2.17.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-glsl": "^1.3.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript2": "^0.27.1",
+    "typescript": "^3.9.5"
+  },
+  "scripts": {
+    "www": "http-server -p855 -c-1 -o"
+  },
+  "name": "doit",
+  "description": "干就完了！",
+  "version": "1.0.0",
+  "main": "bundle.js",
+  "tsmodule": "src/Main.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marisarbq/Doit.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marisarbq/Doit/issues"
+  },
+  "homepage": "https://github.com/marisarbq/Doit#readme"
+}
