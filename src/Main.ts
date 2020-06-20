@@ -13,10 +13,13 @@ export default class Main {
         canvas = !canvas ? Main.createCanvas() : canvas;
         this.app = WebGL2Application.createApplication(canvas);
         console.log(this.app)
+        this.init()
     }
 
     private init() {
-        this.app.create(vs,fs);
+        this.app.createProgram();
+        this.app.bindShader(vs,fs);
+        this.app.testDraw();
 
 
     }

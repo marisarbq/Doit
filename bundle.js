@@ -304,8 +304,9 @@
         }
         Shader.prototype.create = function (gl) {
             var t = this.getGLType(gl);
+            console.log(this._glType, t);
             this.shader = gl.createShader(t);
-            gl.shaderSource(this.shader, this.src);
+            gl.shaderSource(this.shader, this.src.trim());
         };
         Shader.prototype.getGLType = function (gl) {
             if (this._glType == "vert") {
@@ -317,8 +318,11 @@
         };
         Shader.prototype.complete = function (gl) {
             this.create(gl);
+            gl.compileShader(this.shader);
             if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
                 var info = gl.getShaderInfoLog(this.shader);
+                console.error(info, this);
+                this.isError = true;
                 throw info;
             }
             return this.shader;
@@ -344,33 +348,63 @@
         WebGL2Application.prototype.createProgram = function () {
             return this.program = this.gl.createProgram();
         };
-        WebGL2Application.prototype.create = function (vs, fs) {
+        WebGL2Application.prototype.bindShader = function (vs, fs) {
             var vertexShader = new Shader(vs, "vert");
             var fragmentShader = new Shader(fs, "frag");
             vertexShader.complete(this.gl);
             fragmentShader.complete(this.gl);
             if (!vertexShader || !fragmentShader)
                 return;
-            this.gl.attachShader(this.program, vertexShader);
-            this.gl.attachShader(this.program, fragmentShader);
+            this.gl.attachShader(this.program, vertexShader.shader);
+            this.gl.attachShader(this.program, fragmentShader.shader);
             this.gl.linkProgram(this.program);
+            if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
+                var info = this.gl.getProgramInfoLog(this.program);
+                throw 'Could not compile WebGL program. \n\n' + info;
+            }
+        };
+        WebGL2Application.prototype.clearScreen = function (indata) {
+            var color = indata || [0.0, 0.5, 0.0, 1.0];
+            var gl = this.gl;
+            gl.clearColor(color[0], color[1], color[2], color[3]);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        };
+        WebGL2Application.prototype.testDraw = function () {
+            var gl = this.gl;
+            var vertices = [
+                -0.5, -0.5, 0.0,
+                0.5, -0.5, 0.0,
+                0.0, 0.5, 0.0
+            ];
+            var VBO = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+            var v = new Float32Array(vertices);
+            gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+            var aPos = gl.getAttribLocation(this.program, 'aPos');
+            gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
+            gl.enableVertexAttribArray(aPos);
+            gl.useProgram(this.program);
+            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
         };
         return WebGL2Application;
     }(Application));
 
-    var vs = "attribute vec3 aPos;\r\nattribute vec3 aColor;\r\nattribute vec2 aTexCoord;\r\nvarying vec3 outColor;\r\nvarying vec2 TexCoord;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\r\n    outColor = aColor;\r\n    TexCoord = aTexCoord;\r\n}";
+    var vs = "#version 300 es\r\n\r\nlayout (location=0) in vec3 aPos;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\r\n}";
 
-    var fs = "#ifdef GL_ES\r\nprecision mediump float;\r\n#endif\r\n\r\nvarying vec3 outColor;\r\nvarying vec2 TexCoord;\r\n\r\nuniform sampler2D ourTexture;\r\n\r\n\r\nvoid main()\r\n{\r\n    vec4 color = texture2D(ourTexture,TexCoord);\r\n    gl_FragColor = color; //vec4(1.0, 0.5, 0.2, 1.0);\r\n} ";
+    var fs = "#version 300 es\r\n\r\n#ifdef GL_ES\r\nprecision mediump float;\r\n#endif\r\n\r\nout vec4 myColor;\r\n\r\nvoid main()\r\n{\r\n    myColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\r\n} ";
 
     var Main = (function () {
         function Main(canvas) {
-            this.init();
             canvas = !canvas ? Main.createCanvas() : canvas;
             this.app = WebGL2Application.createApplication(canvas);
             console.log(this.app);
+            this.init();
         }
         Main.prototype.init = function () {
-            this.app.create(vs, fs);
+            this.app.createProgram();
+            this.app.bindShader(vs, fs);
+            this.app.testDraw();
         };
         Main.loadJavaScriptLibrary = function (url) {
             var script = document.createElement('script');

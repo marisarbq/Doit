@@ -1,15 +1,12 @@
+#version 300 es
+
 #ifdef GL_ES
 precision mediump float;
 #endif
 
-varying vec3 outColor;
-varying vec2 TexCoord;
-
-uniform sampler2D ourTexture;
-
+out vec4 myColor;
 
 void main()
 {
-    vec4 color = texture2D(ourTexture,TexCoord);
-    gl_FragColor = color; //vec4(1.0, 0.5, 0.2, 1.0);
+    myColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
 } 
