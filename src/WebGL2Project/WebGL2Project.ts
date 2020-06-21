@@ -12,7 +12,7 @@ export default class WebGL2Project {
     static create(gl: WebGL2RenderingContext, vs: string, fs: string): WebGL2Project {
         const project = new WebGL2Project(gl);
         project.createProgram();
-        project.bindShader(vs, fs);
+        // project.bindShader(vs, fs);
         return project;
     }
 
@@ -51,4 +51,24 @@ export default class WebGL2Project {
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
         if (cb) cb(this);
     }
+
+    draw(shader: shaderSource, cb: <Function>(name: WebGL2Project) => void) {
+        this.bindShader(shader.vs, shader.fs);
+        this.drawCall(cb);
+    }
+
+    bindVertices(v: Float32Array) {
+        let gl = this.gl;
+        const VBO = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+        gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+        return VBO;
+    }
+}
+
+
+export interface shaderSource {
+    fs: string,
+    vs: string,
+    uniform?: any
 }

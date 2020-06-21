@@ -49,3 +49,27 @@ GL_TRIANGLE_STRIP,
 GL_TRIANGLE_FAN, 
 
 GL_TRIANGLES
+
+### VBO的使用
+
+- VBO允许usage标示符取以下9种值：
+
+GL_STATIC_DRAW_ARB
+
+GL_STATIC_READ_ARB
+
+GL_STATIC_COPY_ARB
+
+GL_DYNAMIC_DRAW_ARB
+
+GL_DYNAMIC_READ_ARB
+
+GL_DYNAMIC_COPY_ARB
+
+GL_STREAM_DRAW_ARB
+
+GL_STREAM_READ_ARB
+
+GL_STREAM_COPY_ARB
+
+“Static”意味着VBO中的数据不会被改变（一次修改，多次使用），”dynamic”意味着数据可以被频繁修改（多次修改，多次使用），”stream”意味着数据每帧都不同（一次修改，一次使用）。”Draw”意味着数据将会被送往GPU进行绘制，”read”意味着数据会被用户的应用读取，”copy”意味着数据会被用于绘制和读取。注意在使用VBO时，只有draw是有效的，而copy和read主要将会在像素缓冲区（PBO）和帧缓冲区（FBO）中发挥作用。

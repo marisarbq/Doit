@@ -337,7 +337,6 @@
         WebGL2Project.create = function (gl, vs, fs) {
             var project = new WebGL2Project(gl);
             project.createProgram();
-            project.bindShader(vs, fs);
             return project;
         };
         WebGL2Project.prototype.createProgram = function () {
@@ -368,6 +367,17 @@
             if (cb)
                 cb(this);
         };
+        WebGL2Project.prototype.draw = function (shader, cb) {
+            this.bindShader(shader.vs, shader.fs);
+            this.drawCall(cb);
+        };
+        WebGL2Project.prototype.bindVertices = function (v) {
+            var gl = this.gl;
+            var VBO = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+            gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+            return VBO;
+        };
         return WebGL2Project;
     }());
 
@@ -389,50 +399,68 @@
         WebGL2Application.prototype.createProject = function (vs, fs) {
             return WebGL2Project.create(this.gl, vs, fs);
         };
+        WebGL2Application.prototype.renderToView = function (canvas) {
+            var _this = this;
+            var ctx = canvas.getContext('2d');
+            var image = new Image();
+            this.update = function () {
+                var start = Date.now();
+                image.src = _this.canvas.toDataURL();
+                image.onload = function () {
+                    ctx.clearRect(0, 0, 600, 600);
+                    ctx.drawImage(image, 0, 0, 600, 600);
+                    console.log("renderToView usage:" + (Date.now() - start));
+                    image.onload = null;
+                };
+            };
+        };
         return WebGL2Application;
     }(Application));
 
-    var vs = "#version 300 es\r\n\r\nlayout (location=0) in vec3 aPos;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);\r\n}";
+    var vs = "#version 300 es\r\n\r\nlayout (location=0) in vec4 aPos;\r\n\r\nvoid main()\r\n{\r\n    gl_Position = vec4(aPos.x, aPos.y, aPos.z, aPos.w);\r\n}";
 
     var fs = "#version 300 es\r\n\r\n#ifdef GL_ES\r\nprecision mediump float;\r\n#endif\r\n\r\nout vec4 myColor;\r\n\r\nvoid main()\r\n{\r\n    myColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\r\n} ";
 
     var Main = (function () {
-        function Main(canvas) {
+        function Main(viewcanvas) {
             this.programPool = {};
-            canvas = !canvas ? Main.createCanvas() : canvas;
-            this.app = WebGL2Application.createApplication(canvas);
+            viewcanvas = !viewcanvas ? Main.createViewCanvas() : viewcanvas;
+            this.app = WebGL2Application.createApplication(viewcanvas);
             console.log(this.app);
             this.init();
         }
         Main.prototype.init = function () {
-            var demo = this.demo = this.app.createProject(vs, fs);
-            demo.drawCall(function (project) {
+            this.demo = this.app.createProject(vs, fs);
+        };
+        Main.prototype.test1 = function () {
+            this.demo.draw({
+                vs: vs,
+                fs: fs
+            }, function (project) {
                 var gl = project.gl;
                 var vertices = [
-                    -0.5, -0.5, 0.0,
-                    0.5, -0.5, 0.0,
-                    0.0, 0.5, 0.0
+                    -0.5, -0.5, 0.0, 1.0,
+                    0.5, -0.5, 0.0, 1.0,
+                    0.0, 0.5, 0.0, 1.0
                 ];
-                var VBO = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
                 var v = new Float32Array(vertices);
-                gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+                var VBO = project.bindVertices(v);
                 var aPos = gl.getAttribLocation(project.program, 'aPos');
-                gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
+                gl.vertexAttribPointer(aPos, 4, gl.FLOAT, false, 4 * v.BYTES_PER_ELEMENT, 0);
                 gl.enableVertexAttribArray(aPos);
                 gl.useProgram(project.program);
                 gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
                 gl.drawArrays(gl.TRIANGLES, 0, 3);
             });
         };
-        Main.prototype.test = function () {
+        Main.prototype.test2 = function () {
             this.demo.drawCall(function (project) {
                 var gl = project.gl;
                 var vertices = [
-                    -0.5, -0.5, 0.0,
+                    -1.0, -0.5, 0.0,
                     0.5, -0.5, 0.0,
                     0.0, 0.5, 0.0,
-                    0.5, 0.0, 0.0
+                    1.0, 0.0, 0.0
                 ];
                 var VBO = gl.createBuffer();
                 gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
@@ -443,7 +471,7 @@
                 gl.enableVertexAttribArray(aPos);
                 gl.useProgram(project.program);
                 gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-                gl.drawArrays(gl.LINE_LOOP, 0, 4);
+                gl.drawArrays(gl.LINE_STRIP, 0, 4);
             });
         };
         Main.loadJavaScriptLibrary = function (url) {
@@ -452,7 +480,7 @@
             script.src = url;
             document.body.appendChild(script);
         };
-        Main.createCanvas = function () {
+        Main.createViewCanvas = function () {
             var canvas = document.createElement("canvas");
             canvas.width = 1280;
             canvas.height = 1280;

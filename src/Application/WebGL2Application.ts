@@ -1,5 +1,6 @@
 import Application from "./Application";
 import WebGL2Project from "../WebGL2Project/WebGL2Project";
+import BackCanvas from "./BackCanvas";
 
 export default class WebGL2Application extends Application {
 
@@ -20,4 +21,22 @@ export default class WebGL2Application extends Application {
     createProject(vs: string, fs: string) {
         return WebGL2Project.create(this.gl, vs, fs)
     }
+
+    renderToView(canvas: HTMLCanvasElement) {
+        const ctx = canvas.getContext('2d');
+        const image = new Image();
+
+        this.update = () => {
+            let start = Date.now()
+            image.src = this.canvas.toDataURL();
+            image.onload = () => {
+                ctx.clearRect(0, 0, 600, 600);
+                ctx.drawImage(image, 0, 0, 600, 600);
+                console.log(`renderToView usage:${Date.now() - start}`);
+                image.onload = null;
+            }
+        }
+    }
+
+    update: Function;
 }  
