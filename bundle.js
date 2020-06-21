@@ -330,6 +330,47 @@
         return Shader;
     }());
 
+    var WebGL2Project = (function () {
+        function WebGL2Project(gl) {
+            this.gl = gl;
+        }
+        WebGL2Project.create = function (gl, vs, fs) {
+            var project = new WebGL2Project(gl);
+            project.createProgram();
+            project.bindShader(vs, fs);
+            return project;
+        };
+        WebGL2Project.prototype.createProgram = function () {
+            return this.program = this.gl.createProgram();
+        };
+        WebGL2Project.prototype.bindShader = function (vs, fs) {
+            var vertexShader = new Shader(vs, "vert");
+            var fragmentShader = new Shader(fs, "frag");
+            vertexShader.complete(this.gl);
+            fragmentShader.complete(this.gl);
+            if (!vertexShader || !fragmentShader)
+                return;
+            this.gl.attachShader(this.program, vertexShader.shader);
+            this.gl.attachShader(this.program, fragmentShader.shader);
+            this.gl.linkProgram(this.program);
+            if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
+                var info = this.gl.getProgramInfoLog(this.program);
+                throw 'Could not compile WebGL program. \n\n' + info;
+            }
+        };
+        WebGL2Project.prototype.clearScreen = function (indata) {
+            var color = indata || [0.0, 0.5, 0.0, 1.0];
+            var gl = this.gl;
+            gl.clearColor(color[0], color[1], color[2], color[3]);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        };
+        WebGL2Project.prototype.drawCall = function (cb) {
+            if (cb)
+                cb(this);
+        };
+        return WebGL2Project;
+    }());
+
     var WebGL2Application = (function (_super) {
         __extends(WebGL2Application, _super);
         function WebGL2Application() {
@@ -345,47 +386,8 @@
             }
             return app;
         };
-        WebGL2Application.prototype.createProgram = function () {
-            return this.program = this.gl.createProgram();
-        };
-        WebGL2Application.prototype.bindShader = function (vs, fs) {
-            var vertexShader = new Shader(vs, "vert");
-            var fragmentShader = new Shader(fs, "frag");
-            vertexShader.complete(this.gl);
-            fragmentShader.complete(this.gl);
-            if (!vertexShader || !fragmentShader)
-                return;
-            this.gl.attachShader(this.program, vertexShader.shader);
-            this.gl.attachShader(this.program, fragmentShader.shader);
-            this.gl.linkProgram(this.program);
-            if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
-                var info = this.gl.getProgramInfoLog(this.program);
-                throw 'Could not compile WebGL program. \n\n' + info;
-            }
-        };
-        WebGL2Application.prototype.clearScreen = function (indata) {
-            var color = indata || [0.0, 0.5, 0.0, 1.0];
-            var gl = this.gl;
-            gl.clearColor(color[0], color[1], color[2], color[3]);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-        };
-        WebGL2Application.prototype.testDraw = function () {
-            var gl = this.gl;
-            var vertices = [
-                -0.5, -0.5, 0.0,
-                0.5, -0.5, 0.0,
-                0.0, 0.5, 0.0
-            ];
-            var VBO = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-            var v = new Float32Array(vertices);
-            gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
-            var aPos = gl.getAttribLocation(this.program, 'aPos');
-            gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
-            gl.enableVertexAttribArray(aPos);
-            gl.useProgram(this.program);
-            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
+        WebGL2Application.prototype.createProject = function (vs, fs) {
+            return WebGL2Project.create(this.gl, vs, fs);
         };
         return WebGL2Application;
     }(Application));
@@ -396,15 +398,53 @@
 
     var Main = (function () {
         function Main(canvas) {
+            this.programPool = {};
             canvas = !canvas ? Main.createCanvas() : canvas;
             this.app = WebGL2Application.createApplication(canvas);
             console.log(this.app);
             this.init();
         }
         Main.prototype.init = function () {
-            this.app.createProgram();
-            this.app.bindShader(vs, fs);
-            this.app.testDraw();
+            var demo = this.demo = this.app.createProject(vs, fs);
+            demo.drawCall(function (project) {
+                var gl = project.gl;
+                var vertices = [
+                    -0.5, -0.5, 0.0,
+                    0.5, -0.5, 0.0,
+                    0.0, 0.5, 0.0
+                ];
+                var VBO = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+                var v = new Float32Array(vertices);
+                gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+                var aPos = gl.getAttribLocation(project.program, 'aPos');
+                gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
+                gl.enableVertexAttribArray(aPos);
+                gl.useProgram(project.program);
+                gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+            });
+        };
+        Main.prototype.test = function () {
+            this.demo.drawCall(function (project) {
+                var gl = project.gl;
+                var vertices = [
+                    -0.5, -0.5, 0.0,
+                    0.5, -0.5, 0.0,
+                    0.0, 0.5, 0.0,
+                    0.5, 0.0, 0.0
+                ];
+                var VBO = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+                var v = new Float32Array(vertices);
+                gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+                var aPos = gl.getAttribLocation(project.program, 'aPos');
+                gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
+                gl.enableVertexAttribArray(aPos);
+                gl.useProgram(project.program);
+                gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+                gl.drawArrays(gl.LINE_LOOP, 0, 4);
+            });
         };
         Main.loadJavaScriptLibrary = function (url) {
             var script = document.createElement('script');
@@ -415,17 +455,17 @@
         Main.createCanvas = function () {
             var canvas = document.createElement("canvas");
             canvas.width = 1280;
-            canvas.height = 720;
+            canvas.height = 1280;
             canvas.id = "marisa_stage";
             canvas.className = "marisa_stage";
             canvas.style.width = '640px';
-            canvas.style.height = '360px';
+            canvas.style.height = '640px';
             document.body.appendChild(canvas);
             return canvas;
         };
         return Main;
     }());
-    var game = new Main();
+    window["game"] = new Main();
 
     return Main;
 
