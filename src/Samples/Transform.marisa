@@ -1,0 +1,41 @@
+@glsl.vert
+#version 300 es
+
+layout (location=0) in vec3 aPos;
+in vec3 aColor;
+in vec2 aTexCoord;
+
+out vec3 outColor;
+out vec2 TexCoord;
+
+uniform mat4 transform;
+
+void main()
+{
+    gl_Position = transform * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    outColor = aColor;
+    TexCoord = aTexCoord;
+}
+
+@glsl.frag
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+in vec3 outColor;
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+
+out vec4 myColor;
+
+void main()
+{
+    vec4 color = texture(ourTexture,TexCoord);
+    myColor = color;
+} 
+
+
+@ts

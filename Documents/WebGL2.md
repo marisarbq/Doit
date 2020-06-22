@@ -73,3 +73,13 @@ GL_STREAM_READ_ARB
 GL_STREAM_COPY_ARB
 
 “Static”意味着VBO中的数据不会被改变（一次修改，多次使用），”dynamic”意味着数据可以被频繁修改（多次修改，多次使用），”stream”意味着数据每帧都不同（一次修改，一次使用）。”Draw”意味着数据将会被送往GPU进行绘制，”read”意味着数据会被用户的应用读取，”copy”意味着数据会被用于绘制和读取。注意在使用VBO时，只有draw是有效的，而copy和read主要将会在像素缓冲区（PBO）和帧缓冲区（FBO）中发挥作用。
+
+
+### TEXTURE_WRAP 纹理参数
+GL_REPEAT: 超出纹理范围的坐标整数部分被忽略，形成重复效果。
+
+GL_MIRRORED_REPEAT: 超出纹理范围的坐标整数部分被忽略，但当整数部分为奇数时进行取反，形成镜像效果。
+
+GL_CLAMP_TO_EDGE:超出纹理范围的坐标被截取成0和1，形成纹理边缘延伸的效果。
+
+GL_CLAMP_TO_BORDER: 超出纹理范围的部分被设置为边缘色。

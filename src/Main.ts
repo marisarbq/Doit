@@ -2,14 +2,12 @@
 import WebGL2Application from "./Application/WebGL2Application";
 import WebGL2Project from "./WebGL2Project/WebGL2Project";
 
-
-import vs from "./glsl/tex.vert";
-import fs from "./glsl/tex.frag";
 import BackCanvas from "./Application/BackCanvas";
 
 import marisaDraw from "./Samples/Draw.marisa";
 import textureDraw from "./Samples/Texture.marisa";
-
+import texture2Draw from "./Samples/Texture2.marisa";
+ 
 export default class Main {
 
     app: WebGL2Application;
@@ -31,8 +29,10 @@ export default class Main {
     }
 
     tex() {
-        console.log(textureDraw);
         this.drawonce(textureDraw);
+    }
+    tex2() {
+        this.drawonce(texture2Draw);
     }
 
     drawonce(obj: IMarisa) {
