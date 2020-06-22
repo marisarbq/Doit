@@ -1,3 +1,6 @@
+@desc
+如何绘制一个三角形的演示draw
+
 @glsl.vert
 #version 300 es
 

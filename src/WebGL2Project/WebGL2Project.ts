@@ -4,7 +4,7 @@ export default class WebGL2Project {
     gl: WebGL2RenderingContext;
     program: WebGLProgram;
 
-
+    imgres: HTMLImageElement[] = [];
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
     }
@@ -53,8 +53,23 @@ export default class WebGL2Project {
     }
 
     draw(shader: shaderSource, cb: <Function>(name: WebGL2Project) => void) {
+        this.createProgram()
         this.bindShader(shader.vs, shader.fs);
-        this.drawCall(cb);
+        let count = 0;
+        const comp = () => {
+            count++;
+            if (count == shader.img.length) this.drawCall(cb);
+        }
+        if (shader.img && shader.img.length > 0) {
+            this.imgres = shader.img.map(url => {
+                const img = new Image()
+                img.src = url;
+                img.onload = comp
+                return img;
+            })
+        } else {
+            this.drawCall(cb);
+        }
     }
 
     bindVertices(v: Float32Array) {
@@ -64,11 +79,16 @@ export default class WebGL2Project {
         gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
         return VBO;
     }
+
+    getImage(index: number) {
+        return this.imgres[index];
+    }
 }
 
 
 export interface shaderSource {
     fs: string,
     vs: string,
+    img?: string[],
     uniform?: any
 }

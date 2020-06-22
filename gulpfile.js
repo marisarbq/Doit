@@ -11,8 +11,8 @@ gulp.task("build", end => {
         input: './src/Main.ts',
         onwarn: (waring, warn) => {
             if (waring.code == "CIRCULAR_DEPENDENCY") {
-                console.log("循环引用了！");
-                console.log("warnning Circular dependency:");
+                console.log("产生了错误的魔法： 魔力循环");
+                console.log("warnning Magic Error : Circular dependency:");
                 console.log(waring);
             }
         },

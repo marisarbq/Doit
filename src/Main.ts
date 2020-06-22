@@ -8,6 +8,7 @@ import fs from "./glsl/tex.frag";
 import BackCanvas from "./Application/BackCanvas";
 
 import marisaDraw from "./Samples/Draw.marisa";
+import textureDraw from "./Samples/Texture.marisa";
 
 export default class Main {
 
@@ -29,10 +30,16 @@ export default class Main {
         this.demo = this.app.createProject();
     }
 
+    tex() {
+        console.log(textureDraw);
+        this.drawonce(textureDraw);
+    }
+
     drawonce(obj: IMarisa) {
         this.demo.draw({
             vs: obj.vs,
-            fs: obj.fs
+            fs: obj.fs,
+            img: obj.img
         }, project => {
             obj.draw(project)
         })
@@ -41,6 +48,7 @@ export default class Main {
     test2() {
         this.demo.drawCall(project => {
             let gl = project.gl;
+            
             let vertices = [
                 -1.0, -0.5, 0.0,
                 0.5, -0.5, 0.0,

@@ -27,6 +27,7 @@ declare module '*.fs' {
 interface IMarisa {
     vs: string,
     fs: string,
+    img: string[],
     draw: <Function>(prj: any) => void;
 }
 

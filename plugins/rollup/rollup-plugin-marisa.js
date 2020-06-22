@@ -25,7 +25,12 @@ var MagicString = _interopDefault(require('magic-string'));
 //   }, []).join('').replace(/\n+/g, "\n");
 // }
 
-function generateCode(vs, fs, js) {
+function generateCode(vs, fs, js, img) {
+    let imgarr = img.map(url => {
+        return `"${url}"`
+    })
+    const imgstr = `[${imgarr.toString()}]`
+
     var code = `
 const fn = function() {
     ${js}
@@ -33,6 +38,7 @@ const fn = function() {
 const marisa = {
         vs: \`${vs}\`,
         fs: \`${fs}\`,
+        img: ${imgstr},
         draw: project => {
             fn.bind(project)()
         }
@@ -46,7 +52,8 @@ function parseCode(source) {
     var pool = {
         fs: [],
         vs: [],
-        js: []
+        js: [],
+        img: []
     };
     var current;
     var end = false;
@@ -71,6 +78,13 @@ function parseCode(source) {
                 case "@ts":
                     current = "js"
                     break;
+                case "@image":
+                    current = "img";
+                    break;
+                case "@desc":
+                    current = null;
+                    //注释内容
+                    break;
                 case "@end":
                 default:
                     end = true;
@@ -90,6 +104,7 @@ function parseCode(source) {
         vs: pool.vs.join(br),
         fs: pool.fs.join(br),
         js: pool.js.join(br),
+        img: pool.img
     }
     // console.log(code);
     return code
@@ -106,7 +121,7 @@ function marisa(options) {
         transform: function transform(source, id) {
             if (!filter(id)) return;
             var obj = parseCode(source);
-            var code = generateCode(obj.vs, obj.fs, obj.js);
+            var code = generateCode(obj.vs, obj.fs, obj.js, obj.img);
             var result = { code: code };
             return result
         }
