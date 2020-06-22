@@ -18,7 +18,7 @@ export default class WebGL2Application extends Application {
         return app;
     }
 
-    createProject(vs: string, fs: string) {
+    createProject(vs?: string, fs?: string) {
         return WebGL2Project.create(this.gl, vs, fs)
     }
 

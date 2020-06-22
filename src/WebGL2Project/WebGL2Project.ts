@@ -9,7 +9,7 @@ export default class WebGL2Project {
         this.gl = gl;
     }
 
-    static create(gl: WebGL2RenderingContext, vs: string, fs: string): WebGL2Project {
+    static create(gl: WebGL2RenderingContext, vs?: string, fs?: string): WebGL2Project {
         const project = new WebGL2Project(gl);
         project.createProgram();
         // project.bindShader(vs, fs);

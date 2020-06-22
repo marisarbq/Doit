@@ -1,0 +1,46 @@
+@glsl.vert
+#version 300 es
+
+layout (location=0) in vec4 aPos;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, aPos.w);
+}
+
+
+
+@glsl.frag
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+out vec4 myColor;
+
+void main()
+{
+    myColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+}
+
+@typescript
+let gl = this.gl;
+const vertices = [
+    -0.5, -0.5, 0.0, 1.0,
+    0.5, -0.5, 0.0, 1.0,
+    0.0, 0.5, 0.0, 1.0
+];
+
+let v = new Float32Array(vertices)
+let VBO = this.bindVertices(v);
+
+var aPos = gl.getAttribLocation(this.program, 'aPos');
+gl.vertexAttribPointer(aPos, 4, gl.FLOAT, false, 4 * v.BYTES_PER_ELEMENT, 0);
+gl.enableVertexAttribArray(aPos);
+
+gl.useProgram(this.program);
+gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+gl.drawArrays(gl.TRIANGLES, 0, 3);
+console.log("yes! Marisa drawit!")
+

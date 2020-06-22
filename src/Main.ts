@@ -7,6 +7,8 @@ import vs from "./glsl/tex.vert";
 import fs from "./glsl/tex.frag";
 import BackCanvas from "./Application/BackCanvas";
 
+import marisaDraw from "./Samples/Draw.marisa";
+
 export default class Main {
 
     app: WebGL2Application;
@@ -16,41 +18,23 @@ export default class Main {
 
         viewcanvas = !viewcanvas ? Main.createViewCanvas() : viewcanvas;
         this.app = WebGL2Application.createApplication(viewcanvas);
-        // this.app.renderToView(viewcanvas);
         console.log(this.app)
         this.init()
+        this.drawonce(marisaDraw);
     }
 
     demo: WebGL2Project;
 
     private init() {
-        this.demo = this.app.createProject(vs, fs);
+        this.demo = this.app.createProject();
     }
 
-    test1() {
+    drawonce(obj: IMarisa) {
         this.demo.draw({
-            vs,
-            fs
+            vs: obj.vs,
+            fs: obj.fs
         }, project => {
-            let gl = project.gl;
-            const vertices = [
-                -0.5, -0.5, 0.0, 1.0,
-                0.5, -0.5, 0.0, 1.0,
-                0.0, 0.5, 0.0, 1.0
-            ];
-
-            let v = new Float32Array(vertices)
-            let VBO = project.bindVertices(v);
-
-            var aPos = gl.getAttribLocation(project.program, 'aPos');
-            gl.vertexAttribPointer(aPos, 4, gl.FLOAT, false, 4 * v.BYTES_PER_ELEMENT, 0);
-            gl.enableVertexAttribArray(aPos);
-            // gl.enableVertexAttribArray(0);
-            // gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, 0);
-            // gl.bindAttribLocation(program,1,"v3Position");
-            gl.useProgram(project.program);
-            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            obj.draw(project)
         })
     }
 
@@ -73,9 +57,7 @@ export default class Main {
             var aPos = gl.getAttribLocation(project.program, 'aPos');
             gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
             gl.enableVertexAttribArray(aPos);
-            // gl.enableVertexAttribArray(0);
-            // gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, 0);
-            // gl.bindAttribLocation(program,1,"v3Position");
+
             gl.useProgram(project.program);
             gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
             gl.drawArrays(gl.LINE_STRIP, 0, 4);

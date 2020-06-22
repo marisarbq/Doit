@@ -4,6 +4,7 @@ const typescript = require('rollup-plugin-typescript2');
 const commonjs = require('rollup-plugin-commonjs');
 const resolve = require('rollup-plugin-node-resolve');
 const glsl = require('rollup-plugin-glsl')
+const marisa = require('./plugins/rollup/rollup-plugin-marisa');
 
 gulp.task("build", end => {
     rollup.rollup({
@@ -18,6 +19,9 @@ gulp.task("build", end => {
         treeshake: false,
         plugins: [
             resolve(),
+            marisa({
+                include: /.*.marisa/,
+            }),
             commonjs(),
             typescript({
                 tsconfig: "tsconfig.json",
@@ -32,7 +36,7 @@ gulp.task("build", end => {
                 include: /.*(.glsl|.frag|.vert|.vs|.fs)$/,
                 sourceMap: false,
                 compress: false
-            }),
+            })
         ]
     }).then(bundle => {
         end();
