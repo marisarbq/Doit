@@ -115,7 +115,4 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
 gl.uniform1i(ourTexture, 0);
 
-
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
 gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);

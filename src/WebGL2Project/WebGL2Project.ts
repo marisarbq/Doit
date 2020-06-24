@@ -7,10 +7,15 @@ export default class WebGL2Project {
     imgres: HTMLImageElement[] = [];
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
+
+        this.onRender();
     }
 
     vs: Shader;
     fs: Shader;
+
+    //公共域
+    share: any = {}
 
     static create(gl: WebGL2RenderingContext, vs?: string, fs?: string): WebGL2Project {
         const project = new WebGL2Project(gl);
@@ -50,44 +55,63 @@ export default class WebGL2Project {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
+    needUpdate: Boolean = false;
 
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
         if (cb) {
             cb(this);
             console.timeEnd(`Program:`);
+            console.log("yes! Marisa Draw it!")
+            this.needUpdate = true;
         }
     }
 
-    draw(shader: shaderSource, cb: <Function>(name: WebGL2Project) => void) {
+    updateFunction: Function;
+
+    onUpdate() {
+        if (!this.updateFunction) this.needUpdate = false;
+        if (!this.needUpdate) return;
+        this.updateFunction(this);
+    }
+
+    onRender() {
+        this.onUpdate();
+        // console.log('render');
+        requestAnimationFrame(this.onRender.bind(this))
+    }
+
+    draw(marisa: IMarisa) {
         console.time(`Program:`)
         this.clearProgram()
         this.createProgram()
-        this.bindShader(shader.vs, shader.fs);
+        this.bindShader(marisa.vs, marisa.fs);
         let count = 0;
+        this.updateFunction = marisa.update;
         const comp = () => {
             count++;
-            if (count == shader.img.length) this.drawCall(cb);
+            if (count == marisa.img.length) this.drawCall(marisa.draw);
         }
-        if (shader.img && shader.img.length > 0) {
-            this.imgres = shader.img.map(url => {
+        if (marisa.img && marisa.img.length > 0) {
+            this.imgres = marisa.img.map(url => {
                 const img = new Image()
                 img.src = url;
                 img.onload = comp
                 return img;
             })
         } else {
-            this.drawCall(cb);
+            this.drawCall(marisa.draw);
         }
     }
 
     clearProgram() {
+        this.needUpdate = false;
         let gl = this.gl;
+        this.vs ? this.vs.destroy(this) : void 0;
+        this.fs ? this.fs.destroy(this) : void 0;
         this.program ? gl.deleteProgram(this.program) : void 0;
-        this.vs ? this.vs.destroy(gl) : void 0;
-        this.fs ? this.fs.destroy(gl) : void 0;
+        this.share = {}
         this.vs = this.fs = this.program = null;
     }
-
 
 
     bindVertices(v: Float32Array) {

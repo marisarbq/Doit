@@ -51,14 +51,7 @@ export default class Main {
     }
 
     drawonce(obj: IMarisa) {
-
-        this.demo.draw({
-            vs: obj.vs,
-            fs: obj.fs,
-            img: obj.img
-        }, project => {
-            obj.draw(project)
-        })
+        this.demo.draw(obj)
     }
 
     static loadJavaScriptLibrary(url) {

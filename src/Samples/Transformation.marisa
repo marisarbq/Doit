@@ -41,7 +41,7 @@ void main()
 
 @draw
 const vertices = [
-    0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 2.0, 1.0,
+    0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
     0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
     -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
     -0.5, 0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0
@@ -62,14 +62,15 @@ const indices = [
 const gl = this.gl;
 const program = this.program;
 
-let VBO = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+this.share.VBO = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, this.share.VBO);
 let v = new Float32Array(vertices);
 gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
 
-let EBO = gl.createBuffer();
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
+this.share.EBO = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.share.EBO);
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+
 
 var aPos = gl.getAttribLocation(program, 'aPos');
 gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 8 * v.BYTES_PER_ELEMENT, 0);
@@ -94,7 +95,7 @@ var ourTexture = gl.getUniformLocation(program, 'ourTexture');
 @draw
 let img = this.getImage(0);
 
-let tex = gl.createTexture();
+let tex = this.share.tex = gl.createTexture();
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
 gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 gl.activeTexture(gl.TEXTURE0);
@@ -108,11 +109,29 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
 gl.uniform1i(ourTexture, 0);
 
+gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
 
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
+this.share.angle = 0;
+
+
+@update
+let gl = this.gl;
+
+gl.clearColor(0.2, 0.3, 0.3, 1.0);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+this.share.angle+= 0.5;
+
+let transform = gl.getUniformLocation(this.program, 'transform');
+
+let mat4 = glMatrix.mat4;
+let mat = mat4.create();
+let m2 = mat4.create();
+
+mat4.rotateZ(m2, mat, this.share.angle * Math.PI / 180);
+gl.uniformMatrix4fv(transform, false, m2);
+
 gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);

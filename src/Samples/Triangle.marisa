@@ -37,13 +37,15 @@ const vertices = [
 
 let v = new Float32Array(vertices)
 let VBO = this.bindVertices(v);
+gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
 
 var aPos = gl.getAttribLocation(this.program, 'aPos');
 gl.vertexAttribPointer(aPos, 4, gl.FLOAT, false, 4 * v.BYTES_PER_ELEMENT, 0);
 gl.enableVertexAttribArray(aPos);
 
+
 gl.useProgram(this.program);
-gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+
 gl.drawArrays(gl.TRIANGLES, 0, 3);
-console.log("yes! Marisa drawit!")
+
 

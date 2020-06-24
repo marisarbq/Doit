@@ -29,6 +29,7 @@ interface IMarisa {
     fs: string,
     img: string[],
     draw: <Function>(prj: any) => void;
+    update: <Function>(prj: any) => void;
 }
 
 declare module '*.marisa' {

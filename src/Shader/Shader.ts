@@ -1,3 +1,5 @@
+import WebGL2Project from "../WebGL2Project/WebGL2Project";
+
 export default class Shader {
     shader: WebGLShader;
     isError: boolean = false;
@@ -13,7 +15,7 @@ export default class Shader {
 
     create(gl: WebGL2RenderingContext) {
         let t = this.getGLType(gl);
-        console.log(this._glType,t);
+        console.log(this._glType, t);
         this.shader = gl.createShader(t);
         gl.shaderSource(this.shader, this.src.trim());
     }
@@ -31,7 +33,7 @@ export default class Shader {
         gl.compileShader(this.shader);
         if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
             var info = gl.getShaderInfoLog(this.shader);
-            console.error(info,this);
+            console.error(info, this);
             this.isError = true;
             throw info;
 
@@ -39,7 +41,8 @@ export default class Shader {
         return this.shader;
     }
 
-    destroy(gl: WebGL2RenderingContext) {
-        gl.deleteShader(this.shader);
+    destroy(project: WebGL2Project) {
+        project.gl.detachShader(project.program, this.shader);
+        project.gl.deleteShader(this.shader);
     }
 }
