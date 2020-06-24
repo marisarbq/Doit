@@ -5,58 +5,55 @@ function _interopDefault(ex) { return (ex && (typeof ex === 'object') && 'defaul
 var rollupPluginutils = require('rollup-pluginutils');
 var MagicString = _interopDefault(require('magic-string'));
 
-// function compressShader(source) {
-//   var needNewline = false;
-//   return source.replace(/\\(?:\r\n|\n\r|\n|\r)|\/\*.*?\*\/|\/\/(?:\\(?:\r\n|\n\r|\n|\r)|[^\n\r])*/g, "").split(/\n+/).reduce(function (result, line) {
-//     line = line.trim().replace(/\s{2,}|\t/, " ");
-//     if (line[0] === '#') {
-//       if (needNewline) {
-//         result.push("\n");
-//       }
+function generateCode(textArr) {
+    const br = `
+    `
+    let vs = textArr.vs ? textArr.vs.join(br) : void 0;
+    let fs = textArr.fs ? textArr.fs.join(br) : void 0;
+    let draw = textArr.draw ? textArr.draw.join(br) : void 0;
+    let update = textArr.update ? textArr.update.join(br) : void 0;
 
-//       result.push(line, "\n");
-//       needNewline = false
-//     } else {
-//       result.push(line
-//         .replace(/\s*({|}|=|\*|,|\+|\/|>|<|&|\||\[|\]|\(|\)|\-|!|;)\s*/g, "$1"))
-//       needNewline = true;
-//     }
-//     return result;
-//   }, []).join('').replace(/\n+/g, "\n");
-// }
 
-function generateCode(vs, fs, js, img) {
-    let imgarr = img.map(url => {
-        return `"${url}"`
-    })
-    const imgstr = `[${imgarr.toString()}]`
-
+    let imgstr = `[]`
+    if (textArr.img) {
+        let imgarr = textArr.img.map(url => {
+            return `"${url}"`
+        })
+        imgstr = `[${imgarr.toString()}]`
+    }
     var code = `
-const fn = function() {
-    ${js}
+const draw = function() {
+    ${draw}
+}
+const update = function() {
+    ${update}
 }
 const marisa = {
         vs: \`${vs}\`,
         fs: \`${fs}\`,
         img: ${imgstr},
         draw: project => {
-            fn.bind(project)()
+            draw.bind(project)()
+        },
+        update: project => {
+            update.bind(project)()
         }
     };
     export default marisa`
     return code;
 }
 
+/**
+ *  未来计划把材质、几何数据也拆分成独立的block来独立解析
+ *  @ 方法占用了其他语言的装饰器功能，之后如果CodeBody复杂了再考虑预处理判断分离
+ */
+
+
 function parseCode(source) {
     const map = source.split("\r\n");
-    var pool = {
-        fs: [],
-        vs: [],
-        js: [],
-        img: []
-    };
     var current;
     var end = false;
+    const pool = {}
     map.map(line => {
         if (line.slice(0, 1) == "@") {
             switch (line.trim().toLocaleLowerCase()) {
@@ -72,11 +69,11 @@ function parseCode(source) {
                 case "@glsl.fs":
                     current = "fs"
                     break;
-                case "@javascript":
-                case "@typescript":
-                case "@js":
-                case "@ts":
-                    current = "js"
+                case "@draw":
+                    current = "draw"
+                    break;
+                case "@update":
+                    current = "update"
                     break;
                 case "@image":
                     current = "img";
@@ -94,20 +91,12 @@ function parseCode(source) {
             if (end) return;
             if (current) {
                 if (line == "") return;
+                if (!pool[current]) pool[current] = []
                 pool[current].push(line)
             }
         }
     })
-    const br = `
-`
-    const code = {
-        vs: pool.vs.join(br),
-        fs: pool.fs.join(br),
-        js: pool.js.join(br),
-        img: pool.img
-    }
-    // console.log(code);
-    return code
+    return pool
 }
 
 function marisa(options) {
@@ -117,12 +106,11 @@ function marisa(options) {
 
     return {
         name: 'marisa',
-
         transform: function transform(source, id) {
             if (!filter(id)) return;
-            var obj = parseCode(source);
+            var textArr = parseCode(source);
             //草这地方，一定要改，好弱智的写法，但是我现在不想改，又不是不能用
-            var code = generateCode(obj.vs, obj.fs, obj.js, obj.img);
+            var code = generateCode(textArr);
             var result = { code: code };
             return result
         }

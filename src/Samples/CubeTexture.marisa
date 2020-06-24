@@ -41,7 +41,7 @@ void main()
 
 
 
-@ts
+@draw
 const vertices = [
     0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 2.0, 1.0,
     0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
@@ -93,7 +93,7 @@ var ourTexture = gl.getUniformLocation(program, 'ourTexture');
 @image
 ./assets/image/1.jpg
 
-@ts
+@draw
 let img = this.getImage(0);
 
 

@@ -52,10 +52,14 @@ export default class WebGL2Project {
 
 
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
-        if (cb) cb(this);
+        if (cb) {
+            cb(this);
+            console.timeEnd(`Program:`);
+        }
     }
 
     draw(shader: shaderSource, cb: <Function>(name: WebGL2Project) => void) {
+        console.time(`Program:`)
         this.clearProgram()
         this.createProgram()
         this.bindShader(shader.vs, shader.fs);

@@ -4,11 +4,22 @@ import WebGL2Project from "./WebGL2Project/WebGL2Project";
 
 import BackCanvas from "./Application/BackCanvas";
 
-import marisaDraw from "./Samples/Draw.marisa";
-import textureDraw from "./Samples/Texture.marisa";
-import texture2Draw from "./Samples/Texture2.marisa";
- 
+
+//Samples
+import Triangle from "./Samples/Triangle.marisa";
+import TriangleTexture from "./Samples/TriangleTexture.marisa";
+import CubeTexture from "./Samples/CubeTexture.marisa";
+import Transformation from "./Samples/Transformation.marisa";
+
+
 export default class Main {
+
+    samples: { [name: string]: IMarisa } = {
+        Triangle,
+        TriangleTexture,
+        CubeTexture,
+        Transformation
+    }
 
     app: WebGL2Application;
     programPool: { [name: string]: WebGL2Project } = {}
@@ -17,9 +28,9 @@ export default class Main {
 
         viewcanvas = !viewcanvas ? Main.createViewCanvas() : viewcanvas;
         this.app = WebGL2Application.createApplication(viewcanvas);
-        console.log(this.app)
         this.init()
-        this.drawonce(marisaDraw);
+        console.log(this.samples);
+        this.runId(0);
     }
 
     demo: WebGL2Project;
@@ -28,47 +39,25 @@ export default class Main {
         this.demo = this.app.createProject();
     }
 
-    tex() {
-        this.drawonce(textureDraw);
+    runId(id: number) {
+        let arr = Object.keys(this.samples);
+        if (id >= arr.length) { console.error("请输入正确的序号"); return };
+        let name = arr[id];
+        this.drawonce(this.samples[name]);
     }
-    tex2() {
-        this.drawonce(texture2Draw);
+
+    run(name: string) {
+        this.drawonce(this.samples[name]);
     }
 
     drawonce(obj: IMarisa) {
+
         this.demo.draw({
             vs: obj.vs,
             fs: obj.fs,
             img: obj.img
         }, project => {
             obj.draw(project)
-        })
-    }
-
-    test2() {
-        this.demo.drawCall(project => {
-            let gl = project.gl;
-            
-            let vertices = [
-                -1.0, -0.5, 0.0,
-                0.5, -0.5, 0.0,
-                0.0, 0.5, 0.0,
-                1.0, 0.0, 0.0
-            ];
-            //glGenBuffers
-            let VBO = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-            let v = new Float32Array(vertices);
-            gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
-
-
-            var aPos = gl.getAttribLocation(project.program, 'aPos');
-            gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 3 * v.BYTES_PER_ELEMENT, 0);
-            gl.enableVertexAttribArray(aPos);
-
-            gl.useProgram(project.program);
-            gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
-            gl.drawArrays(gl.LINE_STRIP, 0, 4);
         })
     }
 
