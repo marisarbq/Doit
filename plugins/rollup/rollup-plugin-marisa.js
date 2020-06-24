@@ -121,6 +121,7 @@ function marisa(options) {
         transform: function transform(source, id) {
             if (!filter(id)) return;
             var obj = parseCode(source);
+            //草这地方，一定要改，好弱智的写法，但是我现在不想改，又不是不能用
             var code = generateCode(obj.vs, obj.fs, obj.js, obj.img);
             var result = { code: code };
             return result

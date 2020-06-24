@@ -38,4 +38,8 @@ export default class Shader {
         }
         return this.shader;
     }
+
+    destroy(gl: WebGL2RenderingContext) {
+        gl.deleteShader(this.shader);
+    }
 }

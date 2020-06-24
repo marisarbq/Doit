@@ -9,6 +9,9 @@ export default class WebGL2Project {
         this.gl = gl;
     }
 
+    vs: Shader;
+    fs: Shader;
+
     static create(gl: WebGL2RenderingContext, vs?: string, fs?: string): WebGL2Project {
         const project = new WebGL2Project(gl);
         project.createProgram();
@@ -22,8 +25,8 @@ export default class WebGL2Project {
 
 
     bindShader(vs: string, fs: string): void {
-        let vertexShader = new Shader(vs, "vert");
-        let fragmentShader = new Shader(fs, "frag");
+        let vertexShader = this.vs = new Shader(vs, "vert");
+        let fragmentShader = this.fs = new Shader(fs, "frag");
 
         vertexShader.complete(this.gl);
         fragmentShader.complete(this.gl);
@@ -53,6 +56,7 @@ export default class WebGL2Project {
     }
 
     draw(shader: shaderSource, cb: <Function>(name: WebGL2Project) => void) {
+        this.clearProgram()
         this.createProgram()
         this.bindShader(shader.vs, shader.fs);
         let count = 0;
@@ -71,6 +75,16 @@ export default class WebGL2Project {
             this.drawCall(cb);
         }
     }
+
+    clearProgram() {
+        let gl = this.gl;
+        this.program ? gl.deleteProgram(this.program) : void 0;
+        this.vs ? this.vs.destroy(gl) : void 0;
+        this.fs ? this.fs.destroy(gl) : void 0;
+        this.vs = this.fs = this.program = null;
+    }
+
+
 
     bindVertices(v: Float32Array) {
         let gl = this.gl;
