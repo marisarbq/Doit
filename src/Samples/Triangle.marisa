@@ -39,10 +39,7 @@ let v = new Float32Array(vertices)
 let VBO = this.bindVertices(v);
 gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
 
-var aPos = gl.getAttribLocation(this.program, 'aPos');
-gl.vertexAttribPointer(aPos, 4, gl.FLOAT, false, 4 * v.BYTES_PER_ELEMENT, 0);
-gl.enableVertexAttribArray(aPos);
-
+var aPos = this.attr("aPos",4,4 * v.BYTES_PER_ELEMENT)
 
 gl.useProgram(this.program);
 

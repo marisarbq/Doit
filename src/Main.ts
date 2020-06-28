@@ -10,6 +10,7 @@ import Triangle from "./Samples/Triangle.marisa";
 import TriangleTexture from "./Samples/TriangleTexture.marisa";
 import CubeTexture from "./Samples/CubeTexture.marisa";
 import Transformation from "./Samples/Transformation.marisa";
+import TransformationRot from "./Samples/TransformationRot.marisa";
 import TransformationCube from "./Samples/TransformationCube.marisa";
 import TransformationMultiCube from "./Samples/TransformationMultiCube.marisa"
 import CubeTextureGray from "./Samples/CubeTextureGray.marisa"
@@ -22,11 +23,13 @@ export default class Main {
         CubeTexture,
         CubeTextureGray,
         Transformation,
+        TransformationRot,
         TransformationCube,
         TransformationMultiCube
     }
 
     app: WebGL2Application;
+
     programPool: { [name: string]: WebGL2Project } = {}
 
     constructor(viewcanvas?: HTMLCanvasElement) {
@@ -36,6 +39,8 @@ export default class Main {
         this.init()
         console.log(this.samples);
         this.runId(0);
+        let id = /\?id=(\d)/g.exec(location.search)[1];
+        if (id) this.runId(~~id);
     }
 
     demo: WebGL2Project;
@@ -56,8 +61,8 @@ export default class Main {
     }
 
     list() {
-        Object.keys(this.samples).map((item,index)=> {
-            console.log(index,item)
+        Object.keys(this.samples).map((item, index) => {
+            console.log(index, item)
         })
     }
 
@@ -65,7 +70,7 @@ export default class Main {
         this.demo.draw(obj)
     }
 
-    static loadJavaScriptLibrary(url) {
+    static loadJavaScriptLibrary(url: string) {
         var script = document.createElement('script');
         script.async = false;
         script.src = url;

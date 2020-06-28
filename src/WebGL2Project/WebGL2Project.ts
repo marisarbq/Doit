@@ -2,7 +2,7 @@ import Shader from "../Shader/Shader";
 
 export default class WebGL2Project {
     gl: WebGL2RenderingContext;
-    program: WebGLProgram;
+
 
     imgres: HTMLImageElement[] = [];
     constructor(gl: WebGL2RenderingContext) {
@@ -11,41 +11,27 @@ export default class WebGL2Project {
         this.onRender();
     }
 
-    vs: Shader;
-    fs: Shader;
+    //其实不同的Project还可以共用一些ShaderProgram。
+    shader: Shader[] = []
+
+    get program(): WebGLProgram {
+        return this.shader[0].program;
+    }
 
     //公共域
     share: any = {}
 
     static create(gl: WebGL2RenderingContext, vs?: string, fs?: string): WebGL2Project {
         const project = new WebGL2Project(gl);
-        project.createProgram();
-        // project.bindShader(vs, fs);
+        // project.createShader(vs, fs);
         return project;
     }
 
-    createProgram(): WebGLProgram {
-        return this.program = this.gl.createProgram();
-    }
-
-
-    bindShader(vs: string, fs: string): void {
-        let vertexShader = this.vs = new Shader(vs, "vert");
-        let fragmentShader = this.fs = new Shader(fs, "frag");
-
-        vertexShader.complete(this.gl);
-        fragmentShader.complete(this.gl);
-
-        if (!vertexShader || !fragmentShader) return;
-
-        this.gl.attachShader(this.program, vertexShader.shader);
-        this.gl.attachShader(this.program, fragmentShader.shader);
-
-        this.gl.linkProgram(this.program);
-        if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
-            var info = this.gl.getProgramInfoLog(this.program);
-            throw 'Could not compile WebGL program. \n\n' + info;
-        }
+    createShader(vs: string, fs: string): void {
+        let shader = new Shader(vs, fs, this.gl);
+        this.shader.push(shader);
+        shader.complete();
+        if (!shader) return;
     }
 
     clearScreen(indata?: number[]) {
@@ -56,6 +42,14 @@ export default class WebGL2Project {
     }
 
     needUpdate: Boolean = false;
+
+    attr(name: string, size: number, stride: number): number {
+        let gl = this.gl;
+        var a = gl.getAttribLocation(this.program, 'aPos');
+        gl.vertexAttribPointer(a, size, gl.FLOAT, false, stride, 0);
+        gl.enableVertexAttribArray(a);
+        return a;
+    }
 
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
         if (cb) {
@@ -85,8 +79,7 @@ export default class WebGL2Project {
         console.time(`Program:`)
         console.time(`bindShader:`)
         this.clearProgram()
-        this.createProgram()
-        this.bindShader(marisa.vs, marisa.fs);
+        this.createShader(marisa.vs, marisa.fs);
         let count = 0;
         this.updateFunction = marisa.update;
         const comp = () => {
@@ -113,12 +106,11 @@ export default class WebGL2Project {
 
     clearProgram() {
         this.needUpdate = false;
-        let gl = this.gl;
-        this.vs ? this.vs.destroy(this) : void 0;
-        this.fs ? this.fs.destroy(this) : void 0;
-        this.program ? gl.deleteProgram(this.program) : void 0;
+        this.shader.map(shader => {
+            shader.destroy();
+        })
         this.share = {}
-        this.vs = this.fs = this.program = null;
+        this.shader = [];
     }
 
 

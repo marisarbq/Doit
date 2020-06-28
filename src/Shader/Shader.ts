@@ -1,48 +1,78 @@
 import WebGL2Project from "../WebGL2Project/WebGL2Project";
 
 export default class Shader {
-    shader: WebGLShader;
     isError: boolean = false;
 
-    src: string;
-    _glType: string;
+    vs: string;
+    fs: string;
 
-    constructor(source: string, type: string) {
-        this.src = source;
-        this._glType = type;
+    gl: WebGL2RenderingContext;
+    program: WebGLProgram;
+
+    vshader: WebGLShader;
+    fshader: WebGLShader;
+
+    constructor(vs: string, fs: string, gl: WebGL2RenderingContext) {
+        this.gl = gl;
+        this.fs = fs;
+        this.vs = vs;
         return this;
     }
 
-    create(gl: WebGL2RenderingContext) {
-        let t = this.getGLType(gl);
-        console.log(this._glType, t);
-        this.shader = gl.createShader(t);
-        gl.shaderSource(this.shader, this.src.trim());
+    create() {
+        this.createProgram();
+        let gl = this.gl;
+        this.vshader = gl.createShader(gl.VERTEX_SHADER);
+        this.fshader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(this.vshader, this.vs.trim());
+        gl.shaderSource(this.fshader, this.fs.trim());
     }
 
-    private getGLType(gl: WebGL2RenderingContext) {
-        if (this._glType == "vert") {
-            return gl.VERTEX_SHADER
-        } else if (this._glType == "frag") {
-            return gl.FRAGMENT_SHADER
-        }
+    createProgram(): WebGLProgram {
+        this.program = this.gl.createProgram()
+        return this.program;
     }
 
-    complete(gl: WebGL2RenderingContext) {
-        this.create(gl);
-        gl.compileShader(this.shader);
-        if (!gl.getShaderParameter(this.shader, gl.COMPILE_STATUS)) {
-            var info = gl.getShaderInfoLog(this.shader);
+    attach() {
+        this.gl.attachShader(this.program, this.vshader);
+        this.gl.attachShader(this.program, this.fshader);
+    }
+
+    complete() {
+        let gl = this.gl;
+        this.create();
+        gl.compileShader(this.vshader);
+        gl.compileShader(this.fshader);
+        if (!gl.getShaderParameter(this.vshader, gl.COMPILE_STATUS)) {
+            var info = gl.getShaderInfoLog(this.vshader);
             console.error(info, this);
             this.isError = true;
             throw info;
-
         }
-        return this.shader;
+        if (!gl.getShaderParameter(this.fshader, gl.COMPILE_STATUS)) {
+            var info = gl.getShaderInfoLog(this.fshader);
+            console.error(info, this);
+            this.isError = true;
+            throw info;
+        }
+        this.attach();
+        this.gl.linkProgram(this.program);
+        if (!this.gl.getProgramParameter(this.program, this.gl.LINK_STATUS)) {
+            var info = this.gl.getProgramInfoLog(this.program);
+            throw 'Could not compile WebGL program. \n\n' + info;
+        }
+        return this;
     }
 
-    destroy(project: WebGL2Project) {
-        project.gl.detachShader(project.program, this.shader);
-        project.gl.deleteShader(this.shader);
+    use() {
+        this.gl.useProgram(this.program);
+    }
+
+    destroy() {
+        this.gl.detachShader(this.program, this.vshader);
+        this.gl.detachShader(this.program, this.fshader);
+        this.gl.deleteShader(this.vshader);
+        this.gl.deleteShader(this.fshader);
+        this.gl.deleteProgram(this.program)
     }
 }
