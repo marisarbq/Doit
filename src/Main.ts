@@ -10,7 +10,9 @@ import Triangle from "./Samples/Triangle.marisa";
 import TriangleTexture from "./Samples/TriangleTexture.marisa";
 import CubeTexture from "./Samples/CubeTexture.marisa";
 import Transformation from "./Samples/Transformation.marisa";
-
+import TransformationCube from "./Samples/TransformationCube.marisa";
+import TransformationMultiCube from "./Samples/TransformationMultiCube.marisa"
+import CubeTextureGray from "./Samples/CubeTextureGray.marisa"
 
 export default class Main {
 
@@ -18,7 +20,10 @@ export default class Main {
         Triangle,
         TriangleTexture,
         CubeTexture,
-        Transformation
+        CubeTextureGray,
+        Transformation,
+        TransformationCube,
+        TransformationMultiCube
     }
 
     app: WebGL2Application;
@@ -48,6 +53,12 @@ export default class Main {
 
     run(name: string) {
         this.drawonce(this.samples[name]);
+    }
+
+    list() {
+        Object.keys(this.samples).map((item,index)=> {
+            console.log(index,item)
+        })
     }
 
     drawonce(obj: IMarisa) {

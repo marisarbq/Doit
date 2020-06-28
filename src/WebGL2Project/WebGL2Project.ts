@@ -59,6 +59,7 @@ export default class WebGL2Project {
 
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
         if (cb) {
+            console.timeEnd(`bindShader:`)
             cb(this);
             console.timeEnd(`Program:`);
             console.log("yes! Marisa Draw it!")
@@ -82,6 +83,7 @@ export default class WebGL2Project {
 
     draw(marisa: IMarisa) {
         console.time(`Program:`)
+        console.time(`bindShader:`)
         this.clearProgram()
         this.createProgram()
         this.bindShader(marisa.vs, marisa.fs);
@@ -101,6 +103,12 @@ export default class WebGL2Project {
         } else {
             this.drawCall(marisa.draw);
         }
+    }
+
+    clear() {
+        let gl = this.gl;
+        gl.clearColor(0.2, 0.3, 0.3, 1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
     clearProgram() {

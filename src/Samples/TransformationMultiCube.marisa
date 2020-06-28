@@ -1,0 +1,198 @@
+@desc
+3D旋转一堆Cube
+
+
+@glsl.vert
+#version 300 es
+
+layout (location=0) in vec3 aPos;
+in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+uniform mat4 transform;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    TexCoord = aTexCoord;
+}
+
+@glsl.frag
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+
+out vec4 myColor;
+
+void main()
+{
+    vec4 color = texture(ourTexture,TexCoord);
+    myColor = color;
+} 
+
+
+
+@draw
+const vertices = [
+    -0.5, -0.5, -0.5, 0.0, 0.0,
+    0.5, -0.5, -0.5, 1.0, 0.0,
+    0.5, 0.5, -0.5, 1.0, 1.0,
+    0.5, 0.5, -0.5, 1.0, 1.0,
+    -0.5, 0.5, -0.5, 0.0, 1.0,
+    -0.5, -0.5, -0.5, 0.0, 0.0,
+
+    -0.5, -0.5, 0.5, 0.0, 0.0,
+    0.5, -0.5, 0.5, 1.0, 0.0,
+    0.5, 0.5, 0.5, 1.0, 1.0,
+    0.5, 0.5, 0.5, 1.0, 1.0,
+    -0.5, 0.5, 0.5, 0.0, 1.0,
+    -0.5, -0.5, 0.5, 0.0, 0.0,
+
+    -0.5, 0.5, 0.5, 1.0, 0.0,
+    -0.5, 0.5, -0.5, 1.0, 1.0,
+    -0.5, -0.5, -0.5, 0.0, 1.0,
+    -0.5, -0.5, -0.5, 0.0, 1.0,
+    -0.5, -0.5, 0.5, 0.0, 0.0,
+    -0.5, 0.5, 0.5, 1.0, 0.0,
+
+    0.5, 0.5, 0.5, 1.0, 0.0,
+    0.5, 0.5, -0.5, 1.0, 1.0,
+    0.5, -0.5, -0.5, 0.0, 1.0,
+    0.5, -0.5, -0.5, 0.0, 1.0,
+    0.5, -0.5, 0.5, 0.0, 0.0,
+    0.5, 0.5, 0.5, 1.0, 0.0,
+
+    -0.5, -0.5, -0.5, 0.0, 1.0,
+    0.5, -0.5, -0.5, 1.0, 1.0,
+    0.5, -0.5, 0.5, 1.0, 0.0,
+    0.5, -0.5, 0.5, 1.0, 0.0,
+    -0.5, -0.5, 0.5, 0.0, 0.0,
+    -0.5, -0.5, -0.5, 0.0, 1.0,
+
+    -0.5, 0.5, -0.5, 0.0, 1.0,
+    0.5, 0.5, -0.5, 1.0, 1.0,
+    0.5, 0.5, 0.5, 1.0, 0.0,
+    0.5, 0.5, 0.5, 1.0, 0.0,
+    -0.5, 0.5, 0.5, 0.0, 0.0,
+    -0.5, 0.5, -0.5, 0.0, 1.0
+]
+
+const texCoords = [
+    0.0, 0.0,
+    1.0, 0.0,
+    0.5, 1.0
+];
+
+let vec3 = glMatrix.vec3;
+
+this.share.cubePositions = [
+    vec3.fromValues(0.0, 0.0, 0.0),
+    vec3.fromValues(2.0, 5.0, -15.0),
+    vec3.fromValues(-1.5, -2.2, -2.5),
+    vec3.fromValues(-3.8, -2.0, -12.3),
+    vec3.fromValues(2.4, -0.4, -3.5),
+    vec3.fromValues(-1.7, 3.0, -7.5),
+    vec3.fromValues(1.3, -2.0, -2.5),
+    vec3.fromValues(1.5, 2.0, -2.5),
+    vec3.fromValues(1.5, 0.2, -1.5),
+    vec3.fromValues(-1.3, 1.0, -1.5)
+];
+
+
+
+const gl = this.gl;
+const program = this.program;
+
+this.share.VBO = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, this.share.VBO);
+let v = new Float32Array(vertices);
+gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+
+var aPos = gl.getAttribLocation(program, 'aPos');
+gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 5 * v.BYTES_PER_ELEMENT, 0);
+gl.enableVertexAttribArray(aPos);
+
+var aTexCoord = gl.getAttribLocation(program, 'aTexCoord');
+gl.vertexAttribPointer(aTexCoord, 2, gl.FLOAT, false, 5 * v.BYTES_PER_ELEMENT, 3 * v.BYTES_PER_ELEMENT);
+gl.enableVertexAttribArray(aTexCoord);
+
+gl.useProgram(program);
+
+var ourTexture = gl.getUniformLocation(program, 'ourTexture');
+
+
+@image
+./assets/image/1.jpg
+
+@draw
+let img = this.getImage(0);
+
+let tex = this.share.tex = gl.createTexture();
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, tex);
+
+//一系列tex处理阐述
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+//texture bound to texture unit 0 is not renderable. It maybe non-power-of-2 and have incompatible texture filtering.
+//因为材质图默认很 多图片不是所谓的标准尺寸，2^n这种 需要拉伸
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+gl.uniform1i(ourTexture, 0);
+
+gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
+
+this.share.angle = 0;
+
+
+@update
+let gl = this.gl;
+
+this.clear()
+
+this.share.angle+= 0.5;
+
+let mat4 = glMatrix.mat4, vec3 = glMatrix.vec3;
+
+
+let model = gl.getUniformLocation(this.program, 'model');
+let view = gl.getUniformLocation(this.program, 'view');
+let projection = gl.getUniformLocation(this.program, 'projection');
+
+let modelmat = mat4.create();
+let promat = mat4.create();
+let viewmat = mat4.create();
+
+// mat4.rotate(modelmat, mat4.create(), this.share.angle * Math.PI / 180, vec3.fromValues(1.0, 0.0, 1.0));
+
+mat4.perspective(promat, 3.14 / 4, 1.0, 0.1, 100.0)
+
+mat4.translate(viewmat, mat4.create(), vec3.fromValues(0, 0, -3.0))
+
+gl.uniformMatrix4fv(view, false, viewmat);
+gl.uniformMatrix4fv(projection, false, promat);
+gl.enable(gl.DEPTH_TEST);
+
+for (let i in this.share.cubePositions) {
+    let modelvec3 = this.share.cubePositions[i];
+    let modelmat = mat4.create();
+    mat4.translate(modelmat, modelmat, modelvec3);
+    mat4.rotate(modelmat, modelmat, this.share.angle * (~~i + 2)/10 * Math.PI / 180, vec3.fromValues(0.05, 0.0, 0.05));
+    gl.uniformMatrix4fv(model, false, modelmat);
+    gl.drawArrays(gl.TRIANGLES, 0, 36);
+}
