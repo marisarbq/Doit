@@ -85,6 +85,10 @@ GL_CLAMP_TO_EDGE:超出纹理范围的坐标被截取成0和1，形成纹理边�
 GL_CLAMP_TO_BORDER: 超出纹理范围的部分被设置为边缘色。
 
 
+### 多 Pass 渲染
+其实抽离pass的思路很简单，无非把模型绘制到一个framebuffer上，重复输入输出，两个framebuffer来回倒就可以了。你可以管理一个pass数组。执行渲染的时候，遍历这个pass数据依次处理即可。
+
+
 ## GPU 相关
 
 
