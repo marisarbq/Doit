@@ -75,4 +75,29 @@ export default class Shader {
         this.gl.deleteShader(this.fshader);
         this.gl.deleteProgram(this.program)
     }
+
+    public setBool(name: string, value: boolean) {
+        var local = this.gl.getUniformLocation(this.program, name);
+        this.gl.uniform1i(local, ~~value);
+    }
+
+    public setInt(name: string, value: number) {
+        var local = this.gl.getUniformLocation(this.program, name);
+        this.gl.uniform1i(local, value);
+    }
+
+    public setFloat(name: string, value: number) {
+        var local = this.gl.getUniformLocation(this.program, name);
+        this.gl.uniform1f(local, value);
+    }
+
+    public setVec3(name: string, value: glMatrix.vec3 | number[]) {
+        var local = this.gl.getUniformLocation(this.program, name);
+        this.gl.uniform3fv(local, value);
+    }
+
+    public setMat4(name: string, value: glMatrix.mat4) {
+        var local = this.gl.getUniformLocation(this.program, name);
+        this.gl.uniformMatrix4fv(local, false, value);
+    }
 }

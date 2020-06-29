@@ -1,7 +1,7 @@
 
 import WebGL2Application from "./Application/WebGL2Application";
 import WebGL2Project from "./WebGL2Project/WebGL2Project";
-
+import KeyBoard from "./Input/KeyBoard";
 import BackCanvas from "./Application/BackCanvas";
 
 
@@ -12,8 +12,18 @@ import CubeTexture from "./Samples/CubeTexture.marisa";
 import Transformation from "./Samples/Transformation.marisa";
 import TransformationRot from "./Samples/TransformationRot.marisa";
 import TransformationCube from "./Samples/TransformationCube.marisa";
-import TransformationMultiCube from "./Samples/TransformationMultiCube.marisa"
-import CubeTextureGray from "./Samples/CubeTextureGray.marisa"
+import TransformationMultiCube from "./Samples/TransformationMultiCube.marisa";
+import CubeTextureGray from "./Samples/CubeTextureGray.marisa";
+import ControlBaseMove from "./Samples/Control/BaseMove.marisa";
+import ControlBaseFPS from "./Samples/Control/BaseFPS.marisa";
+import LightingBase from "./Samples/Lighting/Base.marisa";
+import LightingAmbient from "./Samples/Lighting/Ambient.marisa";
+import LightingNormal from "./Samples/Lighting/Normal.marisa";
+import LightingMaterial from "./Samples/Lighting/Material.marisa";
+
+
+import Pointer from "./Input/Pointer";
+
 
 export default class Main {
 
@@ -25,7 +35,13 @@ export default class Main {
         Transformation,
         TransformationRot,
         TransformationCube,
-        TransformationMultiCube
+        TransformationMultiCube,
+        ControlBaseMove,
+        ControlBaseFPS,
+        LightingBase,
+        LightingAmbient,
+        LightingNormal,
+        LightingMaterial
     }
 
     app: WebGL2Application;
@@ -36,10 +52,14 @@ export default class Main {
 
         viewcanvas = !viewcanvas ? Main.createViewCanvas() : viewcanvas;
         this.app = WebGL2Application.createApplication(viewcanvas);
+        KeyBoard.init();
+        Pointer.init(this.app.canvas);
         this.init()
+
         console.log(this.samples);
         this.runId(0);
-        let id = /\?id=(\d)/g.exec(location.search)[1];
+
+        let id = /\?id=(.*)/g.exec(location.search)[1];
         if (id) this.runId(~~id);
     }
 
@@ -53,6 +73,7 @@ export default class Main {
         let arr = Object.keys(this.samples);
         if (id >= arr.length) { console.error("请输入正确的序号"); return };
         let name = arr[id];
+        document.title = name;
         this.drawonce(this.samples[name]);
     }
 

@@ -1,4 +1,7 @@
 import Shader from "../Shader/Shader";
+import KeyBoard from "../Input/KeyBoard";
+import { MoveControl } from "../Control/MoveControl";
+import { FPSControl } from "../Control/FPSControl";
 
 export default class WebGL2Project {
     gl: WebGL2RenderingContext;
@@ -12,10 +15,20 @@ export default class WebGL2Project {
     }
 
     //其实不同的Project还可以共用一些ShaderProgram。
-    shader: Shader[] = []
+    shader: { [name: string]: Shader } = {}
 
     get program(): WebGLProgram {
-        return this.shader[0].program;
+        return this._shader.program;
+    }
+
+    get _shader(): Shader {
+        let shader;
+        if (this.shader["default"]) {
+            shader = this.shader["default"];
+        } else {
+            shader = this.shader[Object.keys(this.shader)[0]];
+        }
+        return shader
     }
 
     //公共域
@@ -27,9 +40,9 @@ export default class WebGL2Project {
         return project;
     }
 
-    createShader(vs: string, fs: string): void {
+    createShader(name: string, vs: string, fs: string): void {
         let shader = new Shader(vs, fs, this.gl);
-        this.shader.push(shader);
+        this.shader[name] = shader;
         shader.complete();
         if (!shader) return;
     }
@@ -43,10 +56,11 @@ export default class WebGL2Project {
 
     needUpdate: Boolean = false;
 
-    attr(name: string, size: number, stride: number): number {
+    attr(name: string, size: number, stride: number, offset?: number): number {
         let gl = this.gl;
-        var a = gl.getAttribLocation(this.program, 'aPos');
-        gl.vertexAttribPointer(a, size, gl.FLOAT, false, stride, 0);
+        offset = offset || 0;
+        var a = gl.getAttribLocation(this.program, name);
+        gl.vertexAttribPointer(a, size, gl.FLOAT, false, stride, offset);
         gl.enableVertexAttribArray(a);
         return a;
     }
@@ -54,7 +68,7 @@ export default class WebGL2Project {
     drawCall(cb: <Function>(name: WebGL2Project) => void) {
         if (cb) {
             console.timeEnd(`bindShader:`)
-            cb(this);
+            cb.bind(this)();
             console.timeEnd(`Program:`);
             console.log("yes! Marisa Draw it!")
             this.needUpdate = true;
@@ -66,12 +80,13 @@ export default class WebGL2Project {
     onUpdate() {
         if (!this.updateFunction) this.needUpdate = false;
         if (!this.needUpdate) return;
-        this.updateFunction(this);
+        this.updateFunction();
     }
 
     onRender() {
         this.onUpdate();
         // console.log('render');
+        if (this.controlPlugin) this.controlPlugin.onUpdate()
         requestAnimationFrame(this.onRender.bind(this))
     }
 
@@ -79,9 +94,14 @@ export default class WebGL2Project {
         console.time(`Program:`)
         console.time(`bindShader:`)
         this.clearProgram()
-        this.createShader(marisa.vs, marisa.fs);
+        if (marisa.shader) {
+            for (let name in marisa.shader) {
+                let shader = marisa.shader[name];
+                this.createShader(name, shader.vs, shader.fs);
+            }
+        }
         let count = 0;
-        this.updateFunction = marisa.update;
+        marisa.update ? this.updateFunction = marisa.update.bind(this) : void 0;
         const comp = () => {
             count++;
             if (count == marisa.img.length) this.drawCall(marisa.draw);
@@ -98,19 +118,48 @@ export default class WebGL2Project {
         }
     }
 
-    clear() {
+    clear(r?: number, g?: number, b?: number) {
         let gl = this.gl;
-        gl.clearColor(0.2, 0.3, 0.3, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        r = r || 0.2;
+        g = g || 0.3;
+        b = b || 0.3;
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.clearColor(r, g, b, 1.0);
+    }
+
+    use(name: string) {
+        name = name || "default"
+        if (this.shader[name]) this.shader[name].use();
     }
 
     clearProgram() {
+        // this.closeControl()
         this.needUpdate = false;
-        this.shader.map(shader => {
-            shader.destroy();
-        })
+        for (let name in this.shader) {
+            this.shader[name].destroy()
+        }
         this.share = {}
-        this.shader = [];
+        this.shader = {};
+    }
+
+    wasdStatus: IWASDStatus
+
+    controlPlugin: MoveControl;
+
+    control(type: string) {
+        // this.initControl();
+        type = type || "move";
+        let _class = MoveControl;
+        switch (type) {
+            case "move":
+                _class = MoveControl;
+                break;
+            case "fps":
+                _class = FPSControl;
+                break;
+        }
+        let ctrl = this.controlPlugin = new _class();
+        ctrl.initControl();
     }
 
 
@@ -125,11 +174,60 @@ export default class WebGL2Project {
     getImage(index: number) {
         return this.imgres[index];
     }
+
+    /**
+     * 抽空改成GemotryUtils, 用于快速生成某些规则几何数据
+     */
+    cube() {
+        return [
+            -0.5, -0.5, -0.5, 0.0, 0.0,
+            0.5, -0.5, -0.5, 1.0, 0.0,
+            0.5, 0.5, -0.5, 1.0, 1.0,
+            0.5, 0.5, -0.5, 1.0, 1.0,
+            -0.5, 0.5, -0.5, 0.0, 1.0,
+            -0.5, -0.5, -0.5, 0.0, 0.0,
+
+            -0.5, -0.5, 0.5, 0.0, 0.0,
+            0.5, -0.5, 0.5, 1.0, 0.0,
+            0.5, 0.5, 0.5, 1.0, 1.0,
+            0.5, 0.5, 0.5, 1.0, 1.0,
+            -0.5, 0.5, 0.5, 0.0, 1.0,
+            -0.5, -0.5, 0.5, 0.0, 0.0,
+
+            -0.5, 0.5, 0.5, 1.0, 0.0,
+            -0.5, 0.5, -0.5, 1.0, 1.0,
+            -0.5, -0.5, -0.5, 0.0, 1.0,
+            -0.5, -0.5, -0.5, 0.0, 1.0,
+            -0.5, -0.5, 0.5, 0.0, 0.0,
+            -0.5, 0.5, 0.5, 1.0, 0.0,
+
+            0.5, 0.5, 0.5, 1.0, 0.0,
+            0.5, 0.5, -0.5, 1.0, 1.0,
+            0.5, -0.5, -0.5, 0.0, 1.0,
+            0.5, -0.5, -0.5, 0.0, 1.0,
+            0.5, -0.5, 0.5, 0.0, 0.0,
+            0.5, 0.5, 0.5, 1.0, 0.0,
+
+            -0.5, -0.5, -0.5, 0.0, 1.0,
+            0.5, -0.5, -0.5, 1.0, 1.0,
+            0.5, -0.5, 0.5, 1.0, 0.0,
+            0.5, -0.5, 0.5, 1.0, 0.0,
+            -0.5, -0.5, 0.5, 0.0, 0.0,
+            -0.5, -0.5, -0.5, 0.0, 1.0,
+
+            -0.5, 0.5, -0.5, 0.0, 1.0,
+            0.5, 0.5, -0.5, 1.0, 1.0,
+            0.5, 0.5, 0.5, 1.0, 0.0,
+            0.5, 0.5, 0.5, 1.0, 0.0,
+            -0.5, 0.5, 0.5, 0.0, 0.0,
+            -0.5, 0.5, -0.5, 0.0, 1.0
+        ]
+    }
 }
 
 
 export interface shaderSource {
-    fs: string,
+    shader: string,
     vs: string,
     img?: string[],
     uniform?: any

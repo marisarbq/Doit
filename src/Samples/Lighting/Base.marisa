@@ -1,0 +1,122 @@
+@glsl.vert
+#version 300 es
+
+layout (location=0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+
+@glsl.frag
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+out vec4 myColor;
+
+uniform vec3 lightColor;
+uniform vec3 objectColor;
+
+void main()
+{
+    myColor = vec4(lightColor * objectColor, 1.0f);
+} 
+
+
+@glsl.vert name=lamp
+#version 300 es
+
+layout (location=0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+
+void main()
+{
+    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+
+@glsl.frag name=lamp
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+out vec4 myColor;
+
+void main()
+{
+    myColor = vec4(1.0);
+} 
+
+
+@draw
+
+const gl = this.gl;
+const program = this.program;
+const vertices = this.cube()
+
+let v = new Float32Array(vertices);
+let VBO = this.bindVertices(v);
+gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+
+this.attr("aPos" ,3 , 5 * v.BYTES_PER_ELEMENT);
+
+this.share.lightPos = glMatrix.vec3.fromValues(1.0, 1.2, -2.0)
+gl.useProgram(program);
+this.control("fps");
+gl.drawArrays(gl.TRIANGLES, 0, 36);
+
+@update
+let mat4 = glMatrix.mat4, vec3 = glMatrix.vec3;
+let gl = this.gl;
+
+this.clear(0.1,0.1,0.1)
+
+
+let promat = mat4.create();
+let viewmat = mat4.create();
+
+let modelvec3 = vec3.fromValues(0, 0, 0);
+let modelmat = mat4.create();
+
+mat4.perspective(promat, 3.14 / 4, 1.0, 0.1, 100.0);
+mat4.translate(modelmat, modelmat, modelvec3);
+
+if(this.controlPlugin) mat4.lookAt(viewmat, this.controlPlugin.cameraPos, vec3.add(vec3.create(), this.controlPlugin.cameraPos, this.controlPlugin.cameraFront), this.controlPlugin.cameraUp);
+
+
+
+gl.enable(gl.DEPTH_TEST);
+
+let shader = this._shader;
+shader.use();
+shader.setMat4('projection', promat);
+shader.setMat4('view', viewmat);
+shader.setMat4('model', modelmat);
+shader.setVec3('lightColor', vec3.fromValues(1, 1, 1));
+shader.setVec3('objectColor', vec3.fromValues(1, 0.5, 0.31));
+
+gl.drawArrays(gl.TRIANGLES, 0, 36);
+
+modelmat = mat4.create();
+mat4.translate(modelmat, modelmat, this.share.lightPos);
+mat4.scale(modelmat, modelmat, vec3.fromValues(0.3, 0.3, 0.3))
+
+shader = this.shader["lamp"];
+shader.use();
+shader.setMat4('projection', promat);
+shader.setMat4('view', viewmat);
+shader.setMat4('model', modelmat);
+gl.drawArrays(gl.TRIANGLES, 0, 36);

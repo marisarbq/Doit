@@ -1,5 +1,5 @@
 @desc
-3D旋转一堆Cube
+FPS相机控制器
 
 
 @glsl.vert
@@ -159,6 +159,7 @@ gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
 
 this.share.angle = 0;
 
+this.control("fps");
 
 @update
 let gl = this.gl;
@@ -180,12 +181,16 @@ let viewmat = mat4.create();
 
 // mat4.rotate(modelmat, mat4.create(), this.share.angle * Math.PI / 180, vec3.fromValues(1.0, 0.0, 1.0));
 
+//view
+
 mat4.perspective(promat, 3.14 / 4, 1.0, 0.1, 100.0)
 
 mat4.translate(viewmat, mat4.create(), vec3.fromValues(0, 0, -3.0))
 
-gl.uniformMatrix4fv(view, false, viewmat);
-gl.uniformMatrix4fv(projection, false, promat);
+if(this.controlPlugin) mat4.lookAt(viewmat, this.controlPlugin.cameraPos, vec3.add(vec3.create(), this.controlPlugin.cameraPos, this.controlPlugin.cameraFront), this.controlPlugin.cameraUp);
+
+
+
 gl.enable(gl.DEPTH_TEST);
 
 for (let i in this.share.cubePositions) {
@@ -193,6 +198,8 @@ for (let i in this.share.cubePositions) {
     let modelmat = mat4.create();
     mat4.translate(modelmat, modelmat, modelvec3);
     mat4.rotate(modelmat, modelmat, this.share.angle * (~~i + 2)/10 * Math.PI / 180, vec3.fromValues(0.05, 0.0, 0.05));
+    gl.uniformMatrix4fv(view, false, viewmat);
+    gl.uniformMatrix4fv(projection, false, promat); 
     gl.uniformMatrix4fv(model, false, modelmat);
     gl.drawArrays(gl.TRIANGLES, 0, 36);
 }
