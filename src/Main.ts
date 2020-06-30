@@ -14,6 +14,7 @@ import TransformationRot from "./Samples/TransformationRot.marisa";
 import TransformationCube from "./Samples/TransformationCube.marisa";
 import TransformationMultiCube from "./Samples/TransformationMultiCube.marisa";
 import CubeTextureGray from "./Samples/CubeTextureGray.marisa";
+import CubeTextureColor from "./Samples/CubeTextureColor.marisa";
 import ControlBaseMove from "./Samples/Control/BaseMove.marisa";
 import ControlBaseFPS from "./Samples/Control/BaseFPS.marisa";
 import LightingBase from "./Samples/Lighting/Base.marisa";
@@ -32,6 +33,7 @@ export default class Main {
         TriangleTexture,
         CubeTexture,
         CubeTextureGray,
+        CubeTextureColor,
         Transformation,
         TransformationRot,
         TransformationCube,

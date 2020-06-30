@@ -1,0 +1,137 @@
+@desc
+阴间渲染
+
+0.2125,0.7154,0.0721
+
+@glsl.vert
+#version 300 es
+
+layout (location=0) in vec3 aPos;
+in vec3 aColor;
+in vec2 aTexCoord;
+
+out vec3 outColor;
+out vec2 TexCoord;
+
+void main()
+{
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0f);
+    outColor = aColor;
+    TexCoord = aTexCoord;
+}
+
+
+@glsl.frag
+#version 300 es
+
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+in vec3 outColor;
+in vec2 TexCoord;
+
+uniform sampler2D ourTexture;
+uniform float ut;
+
+
+vec3 lum = vec3(0.2125, 0.7154, 0.0721);
+
+out vec4 myColor;
+
+void main()
+{
+    vec4 color = texture(ourTexture,TexCoord);
+    float l = dot(color.rgb,lum);
+    myColor = vec4(vec3(step(sin(ut),l)),color.a);
+} 
+
+
+
+@draw
+console.time(`readBuffer:`)
+
+const vertices = [
+    0.5, 0.5, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+    0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0,
+    -0.5, -0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+    -0.5, 0.5, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0
+]
+
+const texCoords = [
+    0.0, 0.0,
+    1.0, 0.0,
+    0.5, 1.0
+];
+
+const indices = [
+    0, 1, 2,
+    0, 3, 2
+];
+
+
+const gl = this.gl;
+const program = this.program;
+
+let VBO = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, VBO);
+let v = new Float32Array(vertices);
+gl.bufferData(gl.ARRAY_BUFFER, v, gl.STATIC_DRAW);
+
+let EBO = gl.createBuffer();
+gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO);
+gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array(indices), gl.STATIC_DRAW);
+
+var aPos = gl.getAttribLocation(program, 'aPos');
+gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 8 * v.BYTES_PER_ELEMENT, 0);
+gl.enableVertexAttribArray(aPos);
+
+var aColor = gl.getAttribLocation(program, 'aColor');
+gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 8 * v.BYTES_PER_ELEMENT, 3 * v.BYTES_PER_ELEMENT);
+gl.enableVertexAttribArray(aColor);
+
+var aTexCoord = gl.getAttribLocation(program, 'aTexCoord');
+gl.vertexAttribPointer(aTexCoord, 2, gl.FLOAT, false, 8 * v.BYTES_PER_ELEMENT, 6 * v.BYTES_PER_ELEMENT);
+gl.enableVertexAttribArray(aTexCoord);
+
+gl.useProgram(program);
+
+var ourTexture = gl.getUniformLocation(program, 'ourTexture');
+
+
+@image
+./assets/image/1.jpg
+
+@draw
+let img = this.getImage(0);
+
+
+let tex = gl.createTexture();
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_2D, tex);
+
+//一系列tex处理阐述
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+//texture bound to texture unit 0 is not renderable. It maybe non-power-of-2 and have incompatible texture filtering.
+//因为材质图默认很 多图片不是所谓的标准尺寸，2^n这种 需要拉伸
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+gl.uniform1i(ourTexture, 0);
+console.timeEnd(`readBuffer:`)
+console.time(`render:`)
+gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
+console.timeEnd(`render:`)
+this.share.time = 0;
+@update
+this.share.time+= 0.02;
+this.clear()
+let gl = this.gl;
+this._shader.use()
+this._shader.setFloat("ut",this.share.time);
+gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
