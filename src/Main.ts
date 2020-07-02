@@ -49,6 +49,7 @@ export default class Main {
     app: WebGL2Application;
 
     programPool: { [name: string]: WebGL2Project } = {}
+    id: number = 0;
 
     constructor(viewcanvas?: HTMLCanvasElement) {
 
@@ -61,7 +62,9 @@ export default class Main {
         console.log(this.samples);
         this.runId(0);
         let ex = /\?id=(.*)/g.exec(location.search);
-        ex ? this.runId(ex["1"]): void 0;
+        ex ? this.runId(this.id = ex["1"]) : void 0;
+
+        this.initButton();
     }
 
     demo: WebGL2Project;
@@ -90,6 +93,24 @@ export default class Main {
 
     drawonce(obj: IMarisa) {
         this.demo.draw(obj)
+    }
+
+    bar: HTMLDivElement;
+    initButton() {
+        this.bar = document.createElement("div");
+        Object.assign(this.bar.style, {
+            width: '200px',
+            height: '200px'
+        })
+        document.body.appendChild(this.bar);
+        this.refresh()
+    }
+
+    refresh() {
+        this.bar.innerHTML = `
+        ${this.id > 0 ? `<a href="./index.html?id=${~~this.id - 1}">上一个</a>` : ``}
+        ${this.id < Object.keys(this.samples).length - 1 ? `<a href="./index.html?id=${~~this.id + 1}">下一个</a>` : ``}
+        `
     }
 
     static loadJavaScriptLibrary(url: string) {
