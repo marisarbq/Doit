@@ -43,7 +43,11 @@ void main()
 {
     vec4 color = texture(ourTexture,TexCoord);
     float l = dot(color.rgb,lum);
-    myColor = vec4(vec3(step(sin(ut),l)),color.a);
+    vec4 y = vec4(vec3(step(sin(ut),l)),color.a);
+    if(y.r == 1.0) {
+        color = vec4(0.0f,0.0f,1.0f,1.0f);
+    }
+    myColor = color;
 } 
 
 
@@ -129,7 +133,7 @@ gl.drawElements(gl.TRIANGLE_STRIP, 6, gl.UNSIGNED_BYTE, 0);
 console.timeEnd(`render:`)
 this.share.time = 0;
 @update
-this.share.time+= 0.02;
+this.share.time+= 0.002;
 this.clear()
 let gl = this.gl;
 this._shader.use()

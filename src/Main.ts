@@ -60,9 +60,8 @@ export default class Main {
 
         console.log(this.samples);
         this.runId(0);
-
-        let id = /\?id=(.*)/g.exec(location.search)[1];
-        if (id) this.runId(~~id);
+        let ex = /\?id=(.*)/g.exec(location.search);
+        ex ? this.runId(ex["1"]): void 0;
     }
 
     demo: WebGL2Project;
